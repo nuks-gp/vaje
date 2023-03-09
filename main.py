@@ -44,11 +44,12 @@ async def get_todo(id: int):
 @app.put(f"/update_todo/{id}")
 @version(1)
 
-async def update_todo(id: int):
+async def update_todo(id: int, title: str, description: str):
     session = Session(bind=engine, expire_on_commit = False)
     todo_note = session.query(ToDo).filter(ToDo.id == id).first()
     if todo_note:
-        todo_note.task = task
+        todo_note.title = title
+        todo_note.description = description
         session.commit()
     session.close()
     
@@ -59,6 +60,11 @@ async def update_todo(id: int):
 @version(1)
 
 async def delete_todo(id: int):
+    session = Session(bind=engine, expire_on_commit = False)
+    session.delete(session.query(ToDo).filter(ToDo.id == id).first())
+    session.commit()
+    session.close()
+
     return {"TODO DELETED"}
 
 # LIST ALL TODO
@@ -66,6 +72,8 @@ async def delete_todo(id: int):
 @version(1)
 
 async def list_todo():
-    return {"TODO LIST"}
+    session = Session(bind=engine, expire_on_commit = False)
+    all_todos = session.query(ToDo).all()
+    return all_todos
 
 app = VersionedFastAPI(app, version_format='{major}', prefix_format='/v{major}')    
